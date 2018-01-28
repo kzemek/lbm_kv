@@ -352,7 +352,7 @@ relevant_tables(Node) ->
 %% @private
 %% Returns whether a table is managed by `lbm_kv'.
 %%------------------------------------------------------------------------------
-is_relevant(Node, Table) -> get_cookie(Node, Table) =:= ?LBM_KV_COOKIE.
+is_relevant(Node, Table) -> get_cookie(Node, Table) =:= ?LBM_KV_COOKIE(Table).
 
 %%------------------------------------------------------------------------------
 %% @private

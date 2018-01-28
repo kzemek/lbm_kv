@@ -21,12 +21,6 @@
 -ifndef(lbm_kv_hrl_).
 -define(lbm_kv_hrl_, 1).
 
-%% The record defining an `lbm_kv' table entry.
--record(lbm_kv, {
-          key :: lbm_kv:key() | '_',
-          val :: lbm_kv:value() | '_',
-          ver :: lbm_kv:version() | '_'}).
-
 %% A special define using a `hidden' mnesia feature to set the `cookie' of a
 %% table (at creation time only). This is needed to be able to merge schemas
 %% of nodes. That created the same table independently (while not yet
@@ -35,13 +29,13 @@
 %% incompatible by default. If two nodes have at least one table with the same
 %% name and differing cookie a schema merge and thus a mnesia-connection between
 %% these nodes will be refused by mnesia.
--define(LBM_KV_COOKIE, {{0,0,0}, lbm_kv}).
+-define(LBM_KV_COOKIE(TABLE), {{0,0,0}, TABLE}).
 
 %% The options used in `mnesia:create_table/2'.
--define(LBM_KV_TABLE_OPTS, [{record_name, lbm_kv},
-                            {attributes, record_info(fields, lbm_kv)},
-                            {cookie, ?LBM_KV_COOKIE},
-                            {ram_copies, [node() | nodes()]}]).
+-define(LBM_KV_TABLE_OPTS(TABLE), [{record_name, TABLE},
+                                   {attributes, TABLE:attributes()},
+                                   {cookie, ?LBM_KV_COOKIE(TABLE)},
+                                   {ram_copies, [node() | nodes()]}]).
 
 %% Default timeout for RPC calls.
 -define(LBM_KV_RPC_TIMEOUT, 2000).

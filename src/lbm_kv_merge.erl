@@ -139,18 +139,6 @@ merge_entry(Local, Remote, Table, Key) ->
             {remote, {dirty_write, [Table, Record]}};
         {[], [Record]} ->
             {local, {dirty_write, [Table, Record]}};
-        {[#lbm_kv{val = V}], [Record = #lbm_kv{val = V}]} ->
-            {local, {dirty_write, [Table, Record]}};
-        {[L = #lbm_kv{ver = LVer}], [R = #lbm_kv{ver = RVer}]} ->
-            case lbm_kv_vclock:descends(LVer, RVer) of
-                true ->
-                    {remote, {dirty_write, [Table, L]}};
-                false ->
-                    case lbm_kv_vclock:descends(RVer, LVer) of
-                        true  -> {local, {dirty_write, [Table, R]}};
-                        false -> user_callback(Table, Key, L, R)
-                    end
-            end;
         {[LRecord], [RRecord]} -> %% merging non-lbm_kv table
             user_callback(Table, Key, LRecord, RRecord);
         {{error, Reason}, _} ->
@@ -183,10 +171,6 @@ user_callback(Table, Key, LRecord, RRecord) when is_atom(Table) ->
                             {remote, {dirty_write, [Table, LRecord]}};
                         {{value, RVal}, _} ->
                             {local, {dirty_write, [Table, RRecord]}};
-                        {{value, Val}, #lbm_kv{ver = OldVer}} ->
-                            Ver = lbm_kv_vclock:increment(node(), OldVer),
-                            Record = #lbm_kv{key = Key, val = Val, ver = Ver},
-                            {all, {dirty_write, [Table, Record]}};
                         {{value, Record}, _} ->
                             {all, {dirty_write, [Table, Record]}};
                         {delete, _} ->
@@ -211,7 +195,6 @@ user_callback(Table, Key, _, _) ->
 %%------------------------------------------------------------------------------
 %% @private
 %%------------------------------------------------------------------------------
-get_value(#lbm_kv{val = Val}) -> Val;
 get_value(Val)                -> Val.
 
 %%------------------------------------------------------------------------------
